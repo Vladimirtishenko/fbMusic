@@ -1,0 +1,30 @@
+{
+   "name": "FbMusic",
+   "description": "FbMusicDesc",
+   "background": {
+      "scripts": ["lib/background.js"],
+      "persistent": true
+   },
+   "content_scripts": [
+      {
+         "js": ["data/js/content.js"],
+         "matches": ["*://*/*"],
+         "run_at": "document_start",
+         "all_frames": true
+      }
+   ],
+   "icons": {
+      "64":"data/imgs/add.png"
+   },
+   "web_accessible_resources": [
+      "data/imgs/nota.png",
+      "data/imgs/search-icon.svg",
+      "data/imgs/preloader.gif",
+      "data/imgs/plus.png",
+      "data/imgs/media-play.png"
+   ],
+   "manifest_version": 2,
+   "short_name":"FbMusic",
+   "permissions": ["webRequest","management","*://*/*","tabs","activeTab","storage"],
+   "version": "1.0.0"
+}
