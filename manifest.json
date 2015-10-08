@@ -21,7 +21,8 @@
       "data/imgs/search-icon.svg",
       "data/imgs/preloader.gif",
       "data/imgs/plus.png",
-      "data/imgs/media-play.png"
+      "data/imgs/media-play.png",
+      "data/imgs/controls.png"
    ],
    "manifest_version": 2,
    "short_name":"FbMusic",
