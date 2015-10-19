@@ -24,47 +24,104 @@ FbCreateMusicSong.prototype.currentTimes = function(time) {
 FbCreateMusicSong.prototype.getReplace = function(el) {
     var self = this;
 
-    var allChildDialog = el.querySelectorAll("._5wd4");
+    var allChildDialog = el.querySelectorAll("a[href*='fbmusic']");
 
+    //console.log(allChildDialog);
 
-    for (var i = 0, l = allChildDialog.length; i < l; i++) {
-        var thisOurDialog = allChildDialog[i].querySelector("a[href*='fbmusic']");
+    if (allChildDialog) {
 
-        if (thisOurDialog && !allChildDialog[i].getAttribute('data-processed-fbm')) {
+        [].forEach.call(allChildDialog, createElement);
 
-            var urlLink = decodeURIComponent(thisOurDialog.getAttribute("href")),
-                splitLink = urlLink.split("http://l.facebook.com/l.php?u=http://fbmusic.ml/index.php?")[1],
-                trueSplitLink;
+    }
 
-                if(splitLink){
+    function createElement(item, i) {
+
+        if (item && !item.getAttribute('data-processed-fbm')) {
+            var parent = self.closest(item, "._5wd4");
+
+            //console.log(parent);
+
+            if (parent) {
+                var urlLink = decodeURIComponent(item.getAttribute("href")),
+                    splitLink = urlLink.split("http://l.facebook.com/l.php?u=http://fbmusic.ml/index.php?")[1],
+                    trueSplitLink;
+
+                if (splitLink) {
                     trueSplitLink = splitLink;
                 } else {
-                   trueSplitLink = urlLink.split("http://fbmusic.ml/index.php?")[1];
+                    trueSplitLink = urlLink.split("http://fbmusic.ml/index.php?")[1];
                 }
-
 
                 var div = self.generateOurPlayerInDialog(allChildDialog[i], trueSplitLink);
 
-            var plEl = document.createElement('div');
-            plEl.setAttribute('style', 'width:100%; margin: 20px 0; display: table; width: 100%; position: relative; list-style:none');
-            plEl.innerHTML = div;
+                var plEl = document.createElement('div');
+                plEl.setAttribute('style', 'width:100%; margin: 20px 0; display: table; width: 100%; position: relative; list-style:none');
+                plEl.innerHTML = div;
 
-            for (var c = 0; c < allChildDialog[i].children.length; c++) {
-                allChildDialog[i].children[c].style.display = 'none';
+
+                for (var c = 0; c < parent.children.length; c++) {
+                    parent.children[c].style.display = 'none';
+                }
+                parent.appendChild(plEl);
+                item.setAttribute('data-processed-fbm', 1);
+
+                var play = parent.querySelector(".-item-play");
+
+                if (play && !play.getAttribute("data-click")) {
+                    play.setAttribute("data-click", "click");
+                    play.addEventListener("click", function() {
+                        self.sendMessage(self);
+                    });
+                }
+
             }
-            allChildDialog[i].appendChild(plEl);
-            allChildDialog[i].setAttribute('data-processed-fbm', 1);
 
-            var play = allChildDialog[i].querySelector(".-item-play");
 
-            if (play && !play.getAttribute("data-click")) {
-                play.setAttribute("data-click", "click");
-                play.addEventListener("click", function() {
-                    self.sendMessage(self);
-                });
-            }
         }
-    };
+
+    }
+
+
+
+
+    // for (var i = 0, l = allChildDialog.length; i < l; i++) {
+    //     var thisOurDialog = allChildDialog[i].querySelector("a[href*='fbmusic']");
+
+    //     if (thisOurDialog && !allChildDialog[i].getAttribute('data-processed-fbm')) {
+
+    //         var urlLink = decodeURIComponent(thisOurDialog.getAttribute("href")),
+    //             splitLink = urlLink.split("http://l.facebook.com/l.php?u=http://fbmusic.ml/index.php?")[1],
+    //             trueSplitLink;
+
+    //         if (splitLink) {
+    //             trueSplitLink = splitLink;
+    //         } else {
+    //             trueSplitLink = urlLink.split("http://fbmusic.ml/index.php?")[1];
+    //         }
+
+
+    //         var div = self.generateOurPlayerInDialog(allChildDialog[i], trueSplitLink);
+
+    //         var plEl = document.createElement('div');
+    //         plEl.setAttribute('style', 'width:100%; margin: 20px 0; display: table; width: 100%; position: relative; list-style:none');
+    //         plEl.innerHTML = div;
+
+    //         for (var c = 0; c < allChildDialog[i].children.length; c++) {
+    //             allChildDialog[i].children[c].style.display = 'none';
+    //         }
+    //         allChildDialog[i].appendChild(plEl);
+    //         allChildDialog[i].setAttribute('data-processed-fbm', 1);
+
+    //         var play = allChildDialog[i].querySelector(".-item-play");
+
+    //         if (play && !play.getAttribute("data-click")) {
+    //             play.setAttribute("data-click", "click");
+    //             play.addEventListener("click", function() {
+    //                 self.sendMessage(self);
+    //             });
+    //         }
+    //     }
+    // };
 
 }
 
@@ -206,6 +263,7 @@ FbCreateMusicSong.prototype.observer = function() {
     var observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
             if (mutation.type == "childList") {
+                //console.log(mutation.addedNodes[0])
                 if (mutation.addedNodes[0] && mutation.addedNodes[0].classList && mutation.addedNodes[0].classList.contains("fbNub")) {
                     var panel = mutation.addedNodes[0].querySelector(".fbNubFlyoutFooter");
                     if (panel && !panel.querySelector(".-item-fb-music-outer")) {
@@ -213,7 +271,8 @@ FbCreateMusicSong.prototype.observer = function() {
                         self.getReplace(mutation.addedNodes[0].querySelector(".conversation"));
                     }
                 }
-                if (mutation.addedNodes[0] && mutation.addedNodes[0].classList && (mutation.addedNodes[0].classList.contains("_5rw4") || mutation.addedNodes[0].classList.contains("_5wd4"))) {
+                if (mutation.addedNodes[0]) {
+                    //console.log("this___________");
                     var element = self.closest(mutation.addedNodes[0], ".conversation");
                     if (element) {
                         self.getReplace(element);
@@ -325,11 +384,12 @@ FbCreateMusicSong.prototype.checkCaptcha = function(event, button, self, element
     var urls = button.parentNode.retpath.value,
         urlDomain;
 
-    if (urls.indexOf("yandex.ua")) {
-        urlDomain = "yandex.ua";
-    } else {
+    if (urls.indexOf("yandex.ru") > -1) {
         urlDomain = "yandex.ru";
+    } else {
+        urlDomain = "yandex.ua";
     }
+
 
 
     var url = "https://music." + urlDomain + "/checkcaptcha?key=" + encodeURIComponent(button.parentNode.key.value) + "&retpath=" + encodeURIComponent(button.parentNode.retpath.value) + "&rep=" + encodeURIComponent(button.parentNode.rep.value);
@@ -369,7 +429,10 @@ FbCreateMusicSong.prototype.sendMessage = function(self) {
         duration = target.getAttribute("data-duration"),
         albumId = target.getAttribute("data-album"),
         coverImage = target.getAttribute("data-cover-url-img"),
-        link = "http://fbmusic.ml/index.php?track=" + songId + "&albumId=" + albumId + "&name=" + songName + "&artist=" + artistName + "&duraion=" + duration;
+        outerDialogs = self.closest(target, ".fbNubFlyoutInner"),
+        linkChat = outerDialogs.querySelector(".titlebarText"),
+        hrefs = linkChat.href ? linkChat.href : null,
+        link = "http://fbmusic.ml/index.php?track=" + songId + "&albumId=" + albumId + "&name=" + encodeURIComponent(songName) + "&artist=" + encodeURIComponent(artistName) + "&duraion=" + duration;
 
 
     target.classList.remove("-item-send-song");
@@ -388,7 +451,8 @@ FbCreateMusicSong.prototype.sendMessage = function(self) {
             id = a.split("?")[0].slice(1);
         }
 
-        self.postAdd(id, link, "https://"+coverImage, "", songName, artistName, target);
+        toSendMessageAndName("post");
+
         return;
     }
 
@@ -407,9 +471,37 @@ FbCreateMusicSong.prototype.sendMessage = function(self) {
         }
     }
 
+    toSendMessageAndName();
 
-    self.FBSendAttachment(receiverUrl, link, "fbmusic.ml", "", "https://"+coverImage, songName, artistName, target, closeElement);
 
+    function toSendMessageAndName(statusWhere) {
+
+        var rc = new XMLHttpRequest();
+
+        rc.onreadystatechange = function() {
+            if (4 == rc.readyState && 200 == rc.status) {
+
+                var div = document.createElement("div");
+                div.insertAdjacentHTML("afterbegin", rc.responseText);
+                var title = div.querySelector("#pageTitle");
+                if (statusWhere == "post") {
+                    self.postAdd(id, link, "https://" + coverImage, "", title.innerHTML + " has posted a song", "Listen to it now!", target);
+                } else {
+                    if (hrefs.indexOf("conversation") > -1) {
+                        var thread_fbid = hrefs.split('-')[1];
+                        self.groupPreSend(thread_fbid, link, "fbmusic.ml", "", "https://" + coverImage, title.innerHTML + " has sent you a song", "Listen to it now!", target, closeElement)
+                    } else {
+                        self.FBSendAttachment(receiverUrl, link, "fbmusic.ml", "", "https://" + coverImage, title.innerHTML + " has sent you a song", "Listen to it now!", target, closeElement);
+                    }
+                }
+
+            }
+        }
+
+        rc.open("GET", "/profile.php", true);
+        rc.send(null);
+
+    }
 
 }
 
@@ -542,6 +634,10 @@ FbCreateMusicSong.prototype.playAudio = function(src, el, playing, classie) {
             playingTime = arguments[1].formatTime(currents);
         if (duration) {
             if (timePrograss.classList.contains("-to-playeng-now")) {
+                if (playingTime == "00:00") {
+                    self.stopMusic();
+                    return;
+                }
                 timePrograss.innerHTML = playingTime;
             }
             duration.style.width = (s * 100) / elementFullDuration + "%";
@@ -635,6 +731,9 @@ if (window.self === window.top) {
 
 function tryElement() {
 
+
+
+
     var element = document.querySelector(".videoCallEnabled");
     var elementList = document.querySelector(".conversation");
     var elmentWallIco = document.getElementById("timeline_composer_container") ? document.getElementById("timeline_composer_container") : document.getElementById("pagelet_composer");
@@ -646,6 +745,7 @@ function tryElement() {
         _fbMusic_.genarateIconInWall(elmentWallIco);
         _fbMusic_.genarateReplaceWall(elmentWall);
         _fbMusic_.observer();
+        _fbMusic_.createPopUp();
     } else {
         setTimeout(tryElement, 100);
     }

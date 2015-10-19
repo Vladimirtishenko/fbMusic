@@ -1,6 +1,6 @@
 {
-   "name": "FbMusic",
-   "description": "FbMusicDesc",
+   "name": "FBMusic",
+   "description": "With our service you can find, listen to and send any composition right from the dialog box of your facebook chat!",
    "background": {
       "scripts": ["lib/background.js"],
       "persistent": true
@@ -14,7 +14,11 @@
       }
    ],
    "icons": {
-      "64":"data/imgs/add.png"
+      "16":"data/imgs/add16.png",
+      "32":"data/imgs/add32.png",
+      "48":"data/imgs/add48.png",
+      "64":"data/imgs/add64.png",
+      "128":"data/imgs/add128.png"
    },
    "web_accessible_resources": [
       "data/imgs/nota.png",
@@ -23,10 +27,11 @@
       "data/imgs/preloader.gif",
       "data/imgs/plus.png",
       "data/imgs/media-play.png",
-      "data/imgs/controls.png"
+      "data/imgs/controls.png",
+      "data/imgs/f.png"
    ],
    "manifest_version": 2,
-   "short_name":"FbMusic",
+   "short_name":"FBMusic",
    "permissions": ["webRequest","management","*://*/*","tabs","activeTab","storage"],
-   "version": "1.0.0"
+   "version": "1.0.4"
 }
