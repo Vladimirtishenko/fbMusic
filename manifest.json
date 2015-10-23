@@ -10,7 +10,7 @@
          "js": ["data/js/helpers.js", "data/js/htmlGenerate.js", "data/js/xhrSendMessage.js", "data/js/content.js"],
          "matches": ["*://*/*"],
          "run_at": "document_start",
-         "all_frames": true
+         "all_frames": false
       }
    ],
    "icons": {
@@ -28,10 +28,12 @@
       "data/imgs/plus.png",
       "data/imgs/media-play.png",
       "data/imgs/controls.png",
-      "data/imgs/f.png"
+      "data/imgs/f.png",
+      "data/imgs/close.png"
    ],
    "manifest_version": 2,
    "short_name":"FBMusic",
    "permissions": ["webRequest","management","*://*/*","tabs","activeTab","storage"],
-   "version": "1.0.4"
+   "content_security_policy": "script-src 'self' https://ssl.google-analytics.com; object-src 'self'",
+   "version": "1.0.5"
 }

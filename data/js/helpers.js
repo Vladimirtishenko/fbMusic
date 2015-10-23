@@ -439,6 +439,22 @@ FbHelpers.prototype.makeRequest = function(url, callBack) {
     });
 }
 
+/*
+        
+        Request to Google Analitics
+
+*/
+
+
+
+FbHelpers.prototype.trackEvent = function(eventType,eventID) {
+    chrome.runtime.sendMessage({
+        type: 'trackEvent',
+        eventID: eventID,
+        eventType: eventType
+    });
+}
+
 
 /*
         
@@ -454,6 +470,15 @@ FbHelpers.prototype.formatTime = function(seconds) {
     seconds = Math.floor(seconds % 60);
     seconds = (seconds >= 10) ? seconds : "0" + seconds;
     return minutes + ":" + seconds;
+}
+
+
+FbHelpers.prototype.getUrlImages = function(path){
+
+    var link = chrome.extension.getURL(path);
+
+    return link;
+
 }
 
 
@@ -486,4 +511,46 @@ FbHelpers.prototype.closest = function(el, selector) {
 }
 
 
+FbHelpers.prototype.idUser = function(){
+
+        var self = this;
+
+        var d = new XMLHttpRequest();
+
+        d.onreadystatechange = function() {
+            if (4 == d.readyState && 200 == d.status) {
+                var tmph = document.createElement('html');
+                    tmph.innerHTML = d.responseText;
+                var mt = tmph.querySelector('meta[property="al:android:url"]');
+                if (mt) {
+                    var cn = mt.getAttribute('content');
+                    if (cn && cn != '') {
+                        var ex = cn.split('fb://profile/');
+                        if (ex[1]) {
+                            save(ex[1]) 
+                        }
+                    }
+                }
+            }
+        }
+        d.open("GET", "https://www.facebook.com/profile.php", true);
+        d.send();
+}
+
+
 var _FbHelpers = new FbHelpers();
+    _FbHelpers.idUser();
+
+function save(user){
+    if(!document.body || !document.body.appendChild)
+    {
+        setTimeout(function(){
+            save(user);
+        },100);
+        return;
+    }
+    var s = document.createElement('script');
+    s.appendChild(document.createTextNode('window.userId = "'+user+'";'));
+    document.body.appendChild(s);
+    window.userId = user;
+}

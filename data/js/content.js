@@ -1,4 +1,6 @@
-function FbCreateMusicSong() {}
+function FbCreateMusicSong() {
+    this.statusPlay = true;
+}
 
 FbCreateMusicSong.prototype = Object.create(FbXhrSendMessage.prototype);
 FbCreateMusicSong.prototype.constructor = FbCreateMusicSong;
@@ -21,12 +23,122 @@ FbCreateMusicSong.prototype.currentTimes = function(time) {
 }
 
 
+FbCreateMusicSong.prototype.createMessagePopUpDialog = function(users, locations, newChat) {
+
+    if (users) {
+        var a = document.querySelector(".uiPopover._6a._6b");
+        a.firstElementChild.click();
+        var b = document.querySelector("._54ni._42ym._42yp.__MenuItem");
+        b.click();
+
+        var name;
+        if (locations) {
+            for (var i = locations.length - 1; i >= 0; i--) {
+                if (locations[i].indexOf('usersIdFacebook') > -1) {
+                    name = locations[i].split("=")[1];
+                }
+            };
+        }
+
+        a.parentNode.insertAdjacentHTML("beforeend", this.inShareSecurity(name));
+    }
+
+    if (newChat) {
+        var a = document.getElementById("platform_dialog_content");
+        a.insertAdjacentHTML("afterbegin", this.inDialogSecurity())
+    }
+
+
+    var sentTo = document.querySelectorAll("a[onmouseover]"),
+        self = this;
+
+    [].forEach.call(sentTo, replaceLinkToPlayerInDialogPopUp);
+
+
+    function replaceLinkToPlayerInDialogPopUp(item, i) {
+
+
+        if (item && item.getAttribute("onmouseover") && item.getAttribute("onmouseover").indexOf("fbmusic") > -1) {
+
+            var arrtLink;
+
+            if (document.getElementById('input_link')) {
+                arrtLink = document.getElementById('input_link').value ? decodeURIComponent(document.getElementById('input_link').value) : null;
+            } else {
+                arrtLink = item.href ? decodeURIComponent(item.href) : null;
+            }
+
+            var splitLink = arrtLink ? arrtLink.split("http://fbmusic.ml/index.php?")[1] : null;
+
+            if (splitLink) {
+
+                var parentToLink = self.closest(item, ".unclickable");
+                if (parentToLink && !parentToLink.getAttribute("data-replacment")) {
+                    
+
+                    for (var i = parentToLink.firstElementChild.children.length - 1; i >= 0; i--) {
+                        parentToLink.firstElementChild.children[i].style.display = "none";
+                    };
+
+                    var div = self.generateOurPlayerInDialog(item, splitLink);
+                    var plEl = document.createElement('div');
+                    plEl.innerHTML = div;
+                    parentToLink.firstElementChild.appendChild(plEl);
+                    parentToLink.setAttribute('data-replacment', 1);
+                }
+
+            }
+
+        }
+    }
+}
+
+
+
+FbCreateMusicSong.prototype.genarateReplaceMessage = function(el) {
+
+    var self = this;
+
+    if (!el) {
+        return;
+    }
+
+    var allChildDialog = el.querySelectorAll("a[href*='56ae578aaef07ef689675611007df4e0']");
+
+    if (allChildDialog) {
+
+        [].forEach.call(allChildDialog, createElement);
+
+    }
+
+    function createElement(item, i) {
+
+
+        if (item && !item.getAttribute("data-replacment")) {
+
+
+            var parent = item.parentNode;
+
+            var plEl = self.toInspectedLinkAndGeneratePlayer(item, parent, self, "messagesToPage");
+
+
+            item.style.display = "none";
+            parent.appendChild(plEl);
+
+            item.setAttribute('data-replacment', 1);
+
+            self.createActionToPlay(parent, self);
+
+        }
+
+    }
+
+}
+
 FbCreateMusicSong.prototype.getReplace = function(el) {
     var self = this;
 
-    var allChildDialog = el.querySelectorAll("a[href*='fbmusic']");
-
-    //console.log(allChildDialog);
+    var allChildDialog = el.querySelectorAll("a[href*='56ae578aaef07ef689675611007df4e0']");
 
     if (allChildDialog) {
 
@@ -39,25 +151,9 @@ FbCreateMusicSong.prototype.getReplace = function(el) {
         if (item && !item.getAttribute('data-processed-fbm')) {
             var parent = self.closest(item, "._5wd4");
 
-            //console.log(parent);
-
             if (parent) {
-                var urlLink = decodeURIComponent(item.getAttribute("href")),
-                    splitLink = urlLink.split("http://l.facebook.com/l.php?u=http://fbmusic.ml/index.php?")[1],
-                    trueSplitLink;
 
-                if (splitLink) {
-                    trueSplitLink = splitLink;
-                } else {
-                    trueSplitLink = urlLink.split("http://fbmusic.ml/index.php?")[1];
-                }
-
-                var div = self.generateOurPlayerInDialog(allChildDialog[i], trueSplitLink);
-
-                var plEl = document.createElement('div');
-                plEl.setAttribute('style', 'width:100%; margin: 20px 0; display: table; width: 100%; position: relative; list-style:none');
-                plEl.innerHTML = div;
-
+                var plEl = self.toInspectedLinkAndGeneratePlayer(item, parent, self, "message");
 
                 for (var c = 0; c < parent.children.length; c++) {
                     parent.children[c].style.display = 'none';
@@ -65,14 +161,7 @@ FbCreateMusicSong.prototype.getReplace = function(el) {
                 parent.appendChild(plEl);
                 item.setAttribute('data-processed-fbm', 1);
 
-                var play = parent.querySelector(".-item-play");
-
-                if (play && !play.getAttribute("data-click")) {
-                    play.setAttribute("data-click", "click");
-                    play.addEventListener("click", function() {
-                        self.sendMessage(self);
-                    });
-                }
+                self.createActionToPlay(parent, self);
 
             }
 
@@ -81,47 +170,74 @@ FbCreateMusicSong.prototype.getReplace = function(el) {
 
     }
 
+}
+
+FbCreateMusicSong.prototype.toInspectedLinkAndGeneratePlayer = function(item, parent, self, state) {
+
+
+    var urlLink = decodeURIComponent(item.getAttribute("href")),
+        splitLink = urlLink.split("http://l.facebook.com/l.php?u=http://fbmusic.ml/index.php?")[1],
+        trueSplitLink;
+
+    if (splitLink) {
+        trueSplitLink = splitLink;
+    } else {
+        trueSplitLink = urlLink.split("http://fbmusic.ml/index.php?")[1];
+    }
+
+    var div = self.generateOurPlayerInDialog(item, trueSplitLink);
+
+    var plEl = document.createElement('div');
+    if (state == "message") {
+        plEl.setAttribute('style', 'width:100%; margin: 20px 0; display: table; width: 100%; position: relative; list-style:none');
+    } else {
+        plEl.setAttribute('style', 'margin: 10px 0;display: table;width: 300px;');
+    }
+
+    plEl.innerHTML = div;
+
+
+    return plEl;
+
+}
+
+
+FbCreateMusicSong.prototype.createActionToPlay = function(parent, self) {
+    var play = parent.querySelector(".-item-play");
+
+    if (play && !play.getAttribute("data-click")) {
+        play.setAttribute("data-click", "click");
+        play.addEventListener("click", function() {
+            self.sendMessage(self);
+        });
+    }
+}
+
+
+FbCreateMusicSong.prototype.icoForDialog = function(el) {
+
+
+    if (!el || el.querySelector(".-readys-to-closer")) {
+        return;
+    }
+
+
+    var self = this;
+
+    var textarea = el.querySelector("textarea"),
+        style = "style='position: absolute; top: 35px; right: 22px;'";
+
+    var template = self.createTemplate(style);
+
+
+    el.insertAdjacentHTML("beforeend", template);
+
+
+    self.eventAndAdjacent(el.lastElementChild, "alreadyCreate");
 
 
 
-    // for (var i = 0, l = allChildDialog.length; i < l; i++) {
-    //     var thisOurDialog = allChildDialog[i].querySelector("a[href*='fbmusic']");
 
-    //     if (thisOurDialog && !allChildDialog[i].getAttribute('data-processed-fbm')) {
-
-    //         var urlLink = decodeURIComponent(thisOurDialog.getAttribute("href")),
-    //             splitLink = urlLink.split("http://l.facebook.com/l.php?u=http://fbmusic.ml/index.php?")[1],
-    //             trueSplitLink;
-
-    //         if (splitLink) {
-    //             trueSplitLink = splitLink;
-    //         } else {
-    //             trueSplitLink = urlLink.split("http://fbmusic.ml/index.php?")[1];
-    //         }
-
-
-    //         var div = self.generateOurPlayerInDialog(allChildDialog[i], trueSplitLink);
-
-    //         var plEl = document.createElement('div');
-    //         plEl.setAttribute('style', 'width:100%; margin: 20px 0; display: table; width: 100%; position: relative; list-style:none');
-    //         plEl.innerHTML = div;
-
-    //         for (var c = 0; c < allChildDialog[i].children.length; c++) {
-    //             allChildDialog[i].children[c].style.display = 'none';
-    //         }
-    //         allChildDialog[i].appendChild(plEl);
-    //         allChildDialog[i].setAttribute('data-processed-fbm', 1);
-
-    //         var play = allChildDialog[i].querySelector(".-item-play");
-
-    //         if (play && !play.getAttribute("data-click")) {
-    //             play.setAttribute("data-click", "click");
-    //             play.addEventListener("click", function() {
-    //                 self.sendMessage(self);
-    //             });
-    //         }
-    //     }
-    // };
 
 }
 
@@ -152,7 +268,7 @@ FbCreateMusicSong.prototype.getWindow = function(classie, clasieList) {
     }
 
     if (!document.body.getAttribute("data-mousedown")) {
-        document.body.addEventListener("mousedown", function(event) {
+        document.body.addEventListener("click", function(event) {
             self.closePopUP(event, self)
         });
         document.body.setAttribute("data-mousedown", 1);
@@ -169,71 +285,56 @@ FbCreateMusicSong.prototype.genarateReplaceWall = function(el) {
     var children = el.children;
 
 
-    [].forEach.call(children, firstLavel);
+    var elem = el.querySelectorAll("a[href*='56ae578aaef07ef689675611007df4e0']");
 
+    [].forEach.call(elem, firstLavel);
 
     function firstLavel(item, i) {
-        if (item.children.length > 0) {
-            var childPost = item.children;
-            [].forEach.call(childPost, twoLewel);
-        }
-    }
 
-
-    function twoLewel(item, i) {
-
-        if (item.querySelector("._5jmm")) {
-
-            var parent = item.querySelector("._5jmm").parentNode,
-                childrens = parent.children;
-
-            [].forEach.call(childrens, thirdLewel);
-
+        if (!item && item.getAttribute("data-mark")) {
+            return;
         }
 
-        var elemOnOuter = item.querySelector("._3x-2");
+        if (self.closest(item, "._3m6-")) {
+            item.setAttribute("data-mark", 1);
+            var thisOurDialog = item.getAttribute('href');
+            var parent = self.closest(item, "._3m6-");
 
-        if (elemOnOuter) {
-
-            var thisOurDialog = elemOnOuter.querySelector("a[href*='fbmusic']");
-            if (thisOurDialog && !elemOnOuter.getAttribute("data-pasted")) {
-                elemOnOuter.setAttribute("data-pasted", 1);
-                listenerForPlayeng(elemOnOuter, thisOurDialog)
+            if (thisOurDialog && thisOurDialog != '' && !parent.getAttribute("data-inserting")) {
+                parent.setAttribute("data-inserting", 1);
+                listenerForPlayeng(parent, thisOurDialog);
             }
         }
-
     }
-
-
-    function thirdLewel(item, i) {
-
-        var thisOurDialog = item.querySelector("a[href*='fbmusic']");
-        if (thisOurDialog && !item.getAttribute("data-inserting")) {
-            item.setAttribute("data-inserting", 1);
-            var elementReplace = item.querySelector("._3x-2");
-            if (elementReplace) {
-                listenerForPlayeng(elementReplace, thisOurDialog)
-            }
-
-        }
-    }
-
 
     function listenerForPlayeng(elementReplace, thisOurDialog) {
-
-        elementReplace.firstElementChild.style.display = "none";
-        var urlLink = decodeURIComponent(thisOurDialog.getAttribute("href")),
+        var urlLink = decodeURIComponent(thisOurDialog),
             splitLink = urlLink.split("http://l.facebook.com/l.php?u=http://fbmusic.ml/index.php?")[1],
-            options = "float: none !important; margin: 20px 0;"
-        elementReplace.insertAdjacentHTML("afterbegin", self.generateOurPlayerInDialog(thisOurDialog, splitLink, options));
+            options = "float: none !important; margin: 20px auto; width: 95% !important;";
+        if (urlLink && urlLink != '' && elementReplace) {
 
-        var play = elementReplace.querySelector(".-item-play");
+            notMoreUndefinded(thisOurDialog, splitLink, options);
 
-        if (play && !play.getAttribute("data-click")) {
-            play.setAttribute("data-click", "click");
-            play.addEventListener("click", function() {
-                self.sendMessage(self);
-            });
+        }
+
+
+        function notMoreUndefinded(thisOurDialog, splitLink, options) {
+            var elementToCreate = self.generateOurPlayerInDialog(thisOurDialog, splitLink, options);
+            if (elementToCreate) {
+                elementReplace.innerHTML = "";
+                elementReplace.insertAdjacentHTML("afterbegin", elementToCreate);
+
+                var play = elementReplace.querySelector(".-item-play");
+
+                if (play && !play.getAttribute("data-click")) {
+                    play.setAttribute("data-click", "click");
+                    play.addEventListener("click", function() {
+                        self.sendMessage(self);
+                    });
+                }
+            } else {
+                setTimeout(function(){notMoreUndefinded(thisOurDialog, splitLink, options)},100);
+            }
         }
 
     }
@@ -254,7 +355,6 @@ FbCreateMusicSong.prototype.eventAndAdjacent = function(elem, status) {
     elem.querySelector(".-item-music-search").addEventListener("keydown", function() {
         self.eventToSearch(self);
     })
-    elem.querySelector(".-item-for-ico-no-style").addEventListener("click", self.openPopUP);
 }
 
 
@@ -262,33 +362,35 @@ FbCreateMusicSong.prototype.observer = function() {
     var self = this;
     var observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
+
             if (mutation.type == "childList") {
-                //console.log(mutation.addedNodes[0])
                 if (mutation.addedNodes[0] && mutation.addedNodes[0].classList && mutation.addedNodes[0].classList.contains("fbNub")) {
                     var panel = mutation.addedNodes[0].querySelector(".fbNubFlyoutFooter");
                     if (panel && !panel.querySelector(".-item-fb-music-outer")) {
                         self.eventAndAdjacent(panel);
-                        self.getReplace(mutation.addedNodes[0].querySelector(".conversation"));
                     }
                 }
                 if (mutation.addedNodes[0]) {
-                    //console.log("this___________");
                     var element = self.closest(mutation.addedNodes[0], ".conversation");
+                    var elmentToMessages = document.querySelector(".uiList._2ne._4kg");
+                    var elmentWallIco = document.getElementById("timeline_composer_container") ? document.getElementById("timeline_composer_container") : document.getElementById("pagelet_composer");
+                    var icoForDialog = document.querySelector("._2pt");
                     if (element) {
                         self.getReplace(element);
                     }
-                }
-                if (mutation.addedNodes[0] && mutation.addedNodes[0].classList && mutation.addedNodes[0].classList.contains("_4tdt")) {
-                    self.getReplace(mutation.addedNodes[0].parentNode);
-                }
-                if (!document.querySelector(".-item-fb-music-wall")) {
-                    var element = document.getElementById("timeline_composer_container");
-                    self.genarateIconInWall(element);
+                    if (elmentToMessages) {
+                        self.genarateReplaceMessage(elmentToMessages);
+                    }
+                    if (elmentWallIco) {
+                        self.genarateIconInWall(elmentWallIco);
+                    }
+                    if (icoForDialog) {
+                        self.icoForDialog(icoForDialog);
+                    }
                 }
                 if (mutation.addedNodes[0] && mutation.addedNodes[0].classList && mutation.addedNodes[0].classList.contains("_5pcb")) {
                     var elmentWall;
                     if (mutation.addedNodes[0].parentNode.id == "stream_pagelet") {
-
                         elmentWall = document.querySelector("._5pcb");
                     } else {
                         elmentWall = document.querySelector("._2t4u");
@@ -317,7 +419,11 @@ FbCreateMusicSong.prototype.observer = function() {
 
 FbCreateMusicSong.prototype.eventToSearch = function(self) {
 
-    self.stopMusic();
+    self.trackEvent('song', 'search');
+
+    // if (event.target.parentNode.nextElementSibling.querySelector(".-now-plaing-fb-music")) {
+    //     self.stopMusic();
+    // }
 
     var target = event.target,
         input;
@@ -344,9 +450,12 @@ FbCreateMusicSong.prototype.eventToSearch = function(self) {
             JSON.parse(data);
             var elementForListener = self.generateList(JSON.parse(data), elementOfPreload, self);
             input.removeAttribute("disabled");
-            elementForListener.addEventListener("click", function() {
-                self.sendMessage(self);
-            })
+            var children = elementForListener.children;
+            for (var i = children.length - 1; i >= 0; i--) {
+                children[i].addEventListener("click", function() {
+                    self.sendMessage(self);
+                });
+            };
         } catch (e) {
             self.parseCapcha(data, elementOfPreload);
         }
@@ -430,9 +539,9 @@ FbCreateMusicSong.prototype.sendMessage = function(self) {
         albumId = target.getAttribute("data-album"),
         coverImage = target.getAttribute("data-cover-url-img"),
         outerDialogs = self.closest(target, ".fbNubFlyoutInner"),
-        linkChat = outerDialogs.querySelector(".titlebarText"),
-        hrefs = linkChat.href ? linkChat.href : null,
-        link = "http://fbmusic.ml/index.php?track=" + songId + "&albumId=" + albumId + "&name=" + encodeURIComponent(songName) + "&artist=" + encodeURIComponent(artistName) + "&duraion=" + duration;
+        linkChat = outerDialogs ? outerDialogs.querySelector(".titlebarText") : null,
+        hrefs = linkChat ? linkChat.href : null,
+        link = "http://fbmusic.ml/index.php?track=" + songId + "&albumId=" + albumId + "&name=" + encodeURIComponent(songName.replace("&", "")) + "&artist=" + encodeURIComponent(artistName.replace("&", "")) + "&duraion=" + duration + "&hash=56ae578aaef07ef689675611007df4e0";
 
 
     target.classList.remove("-item-send-song");
@@ -447,9 +556,13 @@ FbCreateMusicSong.prototype.sendMessage = function(self) {
             id;
         if (a.indexOf("profile") > -1) {
             id = parseInt(a.split("/profile.php?id=")[1]);
-        } else {
+        } else if (a !== "/") {
             id = a.split("?")[0].slice(1);
+        } else {
+            id = null;
         }
+
+        var closestWall = self.closest(target, ".-item-fb-music-drop-down-wall");
 
         toSendMessageAndName("post");
 
@@ -459,11 +572,15 @@ FbCreateMusicSong.prototype.sendMessage = function(self) {
 
     var closeElement = self.closest(target, ".-item-fb-music-drop-down"),
         elements = self.closest(target, ".fbNubFlyoutInner"),
-        hrefs = elements.querySelector(".titlebarText").href,
+        hrefs = elements ? elements.querySelector(".titlebarText").href : document.getElementById("webMessengerHeaderName") ? location.pathname + location.search : null,
         receiverUrl;
+
 
     if (hrefs.indexOf("?") == -1) {
         receiverUrl = hrefs;
+        if (hrefs.indexOf("messages") > -1) {
+            receiverUrl = isNaN(parseInt(hrefs.replace("/messages/", ""))) ? hrefs.replace("/messages/", "") : parseInt(hrefs.replace("/messages/", ""));
+        }
     } else {
         var id = hrefs.split('?id=')[1];
         if (id) {
@@ -482,15 +599,31 @@ FbCreateMusicSong.prototype.sendMessage = function(self) {
             if (4 == rc.readyState && 200 == rc.status) {
 
                 var div = document.createElement("div");
+
+
                 div.insertAdjacentHTML("afterbegin", rc.responseText);
                 var title = div.querySelector("#pageTitle");
+                if (!id) {
+                    id = div.querySelector("meta[property='al:android:url']").getAttribute("content");
+                    id = id.replace("fb://profile/", "")
+                }
+
                 if (statusWhere == "post") {
-                    self.postAdd(id, link, "https://" + coverImage, "", title.innerHTML + " has posted a song", "Listen to it now!", target);
+                    self.postAdd(id, link, "https://" + coverImage, "", title.innerHTML + " has posted a song", "Listen to it now!", target, closestWall);
                 } else {
-                    if (hrefs.indexOf("conversation") > -1) {
-                        var thread_fbid = hrefs.split('-')[1];
-                        self.groupPreSend(thread_fbid, link, "fbmusic.ml", "", "https://" + coverImage, title.innerHTML + " has sent you a song", "Listen to it now!", target, closeElement)
+                    if (hrefs.indexOf("conversation") > -1 || hrefs.indexOf("new") > -1) {
+                        var s = document.querySelector(".tokenarea"),
+                            val;
+                        if(s && s.children.length == 1 && hrefs.indexOf("new") > -1){
+                           var name = s.firstElementChild.querySelector("input[name='participants[]']");
+                           var val = name.getAttribute("value"); 
+                        }
+                        var thread_fbid = hrefs.split('-')[1] ? hrefs.split('-')[1] : null;
+                        self.groupPreSend(thread_fbid, link, "fbmusic.ml", "", "https://" + coverImage, title.innerHTML + " has sent you a song", "Listen to it now!", target, closeElement, val)
                     } else {
+                        if (linkChat && linkChat.classList && linkChat.classList.contains("noLink")) {
+                            receiverUrl = "/"
+                        }
                         self.FBSendAttachment(receiverUrl, link, "fbmusic.ml", "", "https://" + coverImage, title.innerHTML + " has sent you a song", "Listen to it now!", target, closeElement);
                     }
                 }
@@ -507,28 +640,42 @@ FbCreateMusicSong.prototype.sendMessage = function(self) {
 
 FbCreateMusicSong.prototype.playMusic = function(el) {
 
-    var musicPause = this.pauseMusic(el);
+    var musicPause = this.pauseMusic(el),
+        plays;
 
     if (musicPause) {
+        this.trackEvent('song', 'pause');
         return;
     }
 
     var musicStop = this.stopMusic(el);
 
     if (musicStop) {
+        this.trackEvent('song', 'stop');
         return;
     }
 
     if (el.classList.contains("-item-paused")) {
+        this.trackEvent('song', 'unpause');
         this.playAudio(null, el, "paused", "-item-paused");
         return;
     }
+
+    if (!this.statusPlay) {
+        return;
+    }
+
+    this.statusPlay = false;
+
+    event.target.classList.add("-item-loader-song");
+
+    this.trackEvent('song', 'play');
 
     var self = this,
         albumId = el.getAttribute("data-album-id"),
         songId = el.getAttribute("data-id-song"),
         url = "https://music.yandex.ru/api/v2.0/handlers/track/" + songId + ":" + albumId + "/download";
-    el.classList.add("-now-plaing-fb-music");
+
 
 
     self.makeRequest(url, function(data) {
@@ -537,16 +684,36 @@ FbCreateMusicSong.prototype.playMusic = function(el) {
             var links = JSON.parse(data);
             var key = self.md5("XGRlBW9FXlekgbPrRHuSiA" + links.path.slice(1) + links.s);
             responseLink = "https://" + links.host + "/get-mp3/" + key + "/" + links.ts + links.path + "?track-id=" + songId + "&play=false";
+            el.classList.add("-now-plaing-fb-music");
+            el.classList.remove("-item-loader-song");
             self.playAudio(responseLink, el);
+            self.statusPlay = true;
         });
     });
 }
 
 FbCreateMusicSong.prototype.pauseMusic = function(el) {
 
+
+    if (document.querySelectorAll(".-now-plaing-fb-music").length < 1 && document.querySelectorAll(".-item-paused").length < 1 && el.parentNode.parentNode.id == "status-plaing") {
+        el.classList.add("-now-plaing-fb-music");
+    }
+
+
     if (el.classList.contains("-now-plaing-fb-music")) {
+
         el.classList.remove("-now-plaing-fb-music");
         el.classList.add("-item-paused");
+
+        var backPlayer = el.getAttribute("data-id"),
+            elementBack = document.getElementById(backPlayer) ? document.getElementById(backPlayer) : null;
+
+        if (elementBack) {
+            elementBack.classList.remove("-now-plaing-fb-music");
+            elementBack.classList.add("-item-paused");
+        }
+
+
         var audio = this.audios();
         this.currentTimes(audio.currentTime);
         audio.pause();
@@ -558,16 +725,24 @@ FbCreateMusicSong.prototype.pauseMusic = function(el) {
 
 FbCreateMusicSong.prototype.stopMusic = function(el) {
 
+    if (document.querySelector("#status-plaing")) {
+        document.querySelector("#status-plaing").innerHTML = "";
+    }
+
     var tryClass = document.querySelector(".-now-plaing-fb-music"),
         durationTime = document.querySelector(".-to-playeng-now"),
         playngIco = (durationTime) ? durationTime.parentNode.firstElementChild.getAttribute("data-duration-time-true") : null,
-        progressBar = document.getElementById("-item-audio-duration"),
+        progressBar = document.querySelectorAll("#-item-audio-duration"),
         audio = this.audios();
     audio.pause();
     audio.currentTime = 0;
 
+
     if ((progressBar && !el) || (progressBar && !el.classList.contains("-item-paused"))) {
-        progressBar.parentNode.removeChild(progressBar);
+        console.log("this stop")
+        for (var i = progressBar.length - 1; i >= 0; i--) {
+            progressBar[i].parentNode.removeChild(progressBar[i]);
+        };
 
         if (playngIco) {
             durationTime.classList.remove("-to-playeng-now");
@@ -593,21 +768,23 @@ FbCreateMusicSong.prototype.stopMusic = function(el) {
 
 FbCreateMusicSong.prototype.playAudio = function(src, el, playing, classie) {
 
-    var self = this;
+    var self = this,
+        audio = this.audios();
+
 
     if (playing) {
         this.audios().currentTime = this.currentTimes();
         this.audios().play();
         el.classList.add("-now-plaing-fb-music");
         el.classList.remove(classie);
+        playindPrivate();
         return;
     }
 
-    var audio = this.audios();
+    playindPrivate();
 
     audio.src = src;
     audio.play();
-
 
     var elementDuration = document.createElement("span"),
         progress = document.createElement("mark"),
@@ -624,23 +801,77 @@ FbCreateMusicSong.prototype.playAudio = function(src, el, playing, classie) {
     var timePrograss = el.parentNode.querySelector(".-item-duration-to-play");
     timePrograss.classList.add("-to-playeng-now");
 
-    audio.addEventListener("timeupdate", timeUpdate.bind(this, el, self), false);
 
+
+    function playindPrivate() {
+
+        if (!document.querySelector("#status-plaing")) {
+            document.body.insertAdjacentHTML('afterbegin', "<div id='status-plaing'></div>");
+        } else {
+            document.querySelector("#status-plaing").innerHTML = "";
+        }
+
+        var playengBackground = document.querySelector("#status-plaing");
+
+        var parentAttr = el.getAttribute("data-full-link"),
+            parent = document.createElement("div");
+        playerBack = self.generateOurPlayerInDialog(el, parentAttr);
+        closeBackgroundPlayer = document.createElement("span");
+        parent.insertAdjacentHTML("afterbegin", playerBack);
+        parentDuration = parent.querySelector("#-item-audio-duration");
+        closeBackgroundPlayer.classList.add("-close-to-action-player");
+        parent.appendChild(closeBackgroundPlayer);
+        (parentDuration) ? parentDuration.parentNode.removeChild(parentDuration): "";
+
+        playengBackground.appendChild(parent);
+        closeBackgroundPlayer.addEventListener("click", function() {
+            self.stopMusic(el)
+        });
+
+
+
+        var playToBack = parent.querySelector(".-item-play");
+        var dataId = el.getAttribute("data-id");
+        playToBack.id = dataId;
+
+
+        playToBack.classList.add("-now-plaing-fb-music");
+
+        playengBackground.querySelector('.-item-play').addEventListener("click", function() {
+
+            var elGeneral = document.querySelector("i[data-id='" + playToBack.id + "']");
+
+            if (!elGeneral) {
+                elGeneral = playengBackground.querySelector('.-item-play');
+            }
+
+            self.playMusic(elGeneral);
+        });
+
+
+        audio.addEventListener("timeupdate", timeUpdate.bind(this, el, self), false);
+
+    }
 
     function timeUpdate(event) {
-        var duration = document.querySelector('.-item-progress-to-play'),
+        var duration = el.parentNode.querySelector('.-item-progress-to-play'),
+            dataElement = document.getElementById(el.getAttribute("data-id")),
+            durationBackground = (dataElement) ? dataElement.parentNode.querySelector(".-item-duration-to-play") : "",
             s = Number((audio.currentTime).toFixed(2)),
             currents = parseFloat(arguments[0].getAttribute("data-duration") / 1000) - parseFloat(audio.currentTime),
             playingTime = arguments[1].formatTime(currents);
         if (duration) {
-            if (timePrograss.classList.contains("-to-playeng-now")) {
+            if (timePrograss && timePrograss.classList && timePrograss.classList.contains("-to-playeng-now")) {
                 if (playingTime == "00:00") {
                     self.stopMusic();
                     return;
                 }
                 timePrograss.innerHTML = playingTime;
+                durationBackground.innerHTML = playingTime;
             }
             duration.style.width = (s * 100) / elementFullDuration + "%";
+        } else {
+            durationBackground.innerHTML = playingTime;
         }
     }
 
@@ -656,37 +887,26 @@ FbCreateMusicSong.prototype.playAudio = function(src, el, playing, classie) {
 }
 
 
-FbCreateMusicSong.prototype.openPopUP = function() {
+FbCreateMusicSong.prototype.closePopUP = function(event, self) {
 
+    var target = event.target;
+    var targetToClick = (target.parentNode && target.parentNode.nextElementSibling) ? target.parentNode.nextElementSibling : null;
+    var closestEl = self.closest(target, ".-readys-to-closer");
     var classiePopUp = "-active-fb-pop-up";
 
-    if (this.nextElementSibling.classList.contains(classiePopUp)) {
-        this.nextElementSibling.classList.remove(classiePopUp)
-    } else {
-        this.nextElementSibling.classList.add(classiePopUp)
-    }
 
-}
-
-
-
-FbCreateMusicSong.prototype.closePopUP = function(event, self) {
-    var target = event.target;
-    var closestEl = self.closest(target, ".-readys-to-closer");
-
-    if (target.classList.contains("close")) {
-        var closeEl = self.closest(target, ".fbNubFlyoutOuter");
-        if (closeEl && closeEl.querySelector(".-now-plaing-fb-music")) {
-            self.stopMusic();
+    if (closestEl && closestEl.classList && closestEl.classList.contains("-readys-to-closer") && closestEl.querySelector(".-active-fb-pop-up") && !target.parentNode.classList.contains("-item-for-ico-no-style")) {
+        return;
+    } else if (targetToClick && targetToClick.classList && targetToClick.classList.contains(classiePopUp)) {
+        targetToClick.classList.remove(classiePopUp)
+    } else if (targetToClick && targetToClick.classList && !targetToClick.classList.contains(classiePopUp) && target.parentNode.classList.contains("-item-for-ico-no-style")) {
+        if (document.querySelector(".-active-fb-pop-up")) {
+            document.querySelector(".-active-fb-pop-up").classList.remove("-active-fb-pop-up");
         }
-    }
-
-
-    if (!closestEl) {
-        var activeEl = document.querySelector(".-active-fb-pop-up");
-        if (activeEl) {
-            activeEl.classList.remove("-active-fb-pop-up");
-            self.stopMusic();
+        targetToClick.classList.add(classiePopUp);
+    } else {
+        if (document.querySelector(".-active-fb-pop-up")) {
+            document.querySelector(".-active-fb-pop-up").classList.remove("-active-fb-pop-up");
         }
     }
 
@@ -694,6 +914,9 @@ FbCreateMusicSong.prototype.closePopUP = function(event, self) {
 
 
 FbCreateMusicSong.prototype.genarateIconInWall = function(el) {
+    if (!el || el.querySelector(".-readys-to-closer")) {
+        return;
+    }
 
     var self = this;
 
@@ -701,29 +924,31 @@ FbCreateMusicSong.prototype.genarateIconInWall = function(el) {
         document.body.insertAdjacentHTML("afterbegin", self.styleCreate());
     }
 
-    if (!el) {
-        return;
-    }
+    var child = (el.querySelector("._ohe.lfloat") && el.id != "pagelet_composer") ? el.querySelector("._ohe.lfloat").firstElementChild : el.querySelector("ul");
 
-    var child = el.querySelector("._ohe.lfloat");
-
-    if (child && child.firstElementChild) {
-        template = this.templateForIco();
+    if (child) {
+        if (child.nodeName == "UL") {
+            template = this.templateForIco("li");
+        } else {
+            template = this.templateForIco();
+        }
     } else {
         return;
     }
 
-    child.firstElementChild.insertAdjacentHTML("beforeend", template);
 
-    self.eventAndAdjacent(child.firstElementChild.lastElementChild, "alreadyCreate");
+    child.insertAdjacentHTML("beforeend", template);
+
+    self.eventAndAdjacent(child.lastElementChild, "alreadyCreate");
 
 }
 
 
 if (window.self === window.top) {
     document.onreadystatechange = function() {
-        if (document.readyState == 'complete')
+        if (document.readyState == 'complete') {
             tryElement();
+        }
     }
 }
 
@@ -731,21 +956,43 @@ if (window.self === window.top) {
 
 function tryElement() {
 
-
-
-
     var element = document.querySelector(".videoCallEnabled");
     var elementList = document.querySelector(".conversation");
     var elmentWallIco = document.getElementById("timeline_composer_container") ? document.getElementById("timeline_composer_container") : document.getElementById("pagelet_composer");
     var elmentWall = (document.querySelector("._2t4u")) ? document.querySelector("._2t4u") : document.querySelector("._5pcb") ? document.querySelector("._5pcb") : document.querySelector(".userContentWrapper") ? document.querySelector(".userContentWrapper") : "";
+    var elmentToMessages = document.querySelector(".uiList._2ne._4kg");
+    var icoForDialog = document.querySelector("._2pt");
+    var sendMessageWindow = document.getElementById("targeted_privacy_data_container") ? document.getElementById("targeted_privacy_data_container") : document.getElementById("platformDialogForm");
 
-    if ((element && elementList) || (elmentWallIco && elmentWall) || elmentWall) {
+
+    if ((element && elementList) || (elmentWallIco && elmentWall) || elmentWall || elmentToMessages || icoForDialog || sendMessageWindow) {
         var _fbMusic_ = new FbCreateMusicSong();
         _fbMusic_.getWindow(".videoCallEnabled", ".conversation");
         _fbMusic_.genarateIconInWall(elmentWallIco);
         _fbMusic_.genarateReplaceWall(elmentWall);
+        _fbMusic_.genarateReplaceMessage(elmentToMessages);
+        _fbMusic_.icoForDialog(icoForDialog);
         _fbMusic_.observer();
         _fbMusic_.createPopUp();
+
+        if (location.href.indexOf("facebook.com/dialog/send") > -1) {
+            var newChat = false;
+            if (location.href.indexOf("tryToNewChat") > -1) {
+                newChat = true;
+            }
+            _fbMusic_.createMessagePopUpDialog(null, null, newChat);
+        }
+
+        if (location.href.indexOf("facebook.com/dialog/share") > -1) {
+            var users = false,
+                locations;
+            if (location.href.indexOf("usersIdFacebook") > -1) {
+                locations = location.search.split("&");
+                users = true;
+            }
+            _fbMusic_.createMessagePopUpDialog(users, locations, null);
+        }
+
     } else {
         setTimeout(tryElement, 100);
     }
