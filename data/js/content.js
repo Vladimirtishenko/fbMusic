@@ -190,11 +190,14 @@ FbCreateMusicSong.prototype.createMessagePopUpDialog = function(users, locations
 
             var arrtLink;
 
+
+
             if (document.getElementById('input_link')) {
                 arrtLink = document.getElementById('input_link').value ? decodeURIComponent(document.getElementById('input_link').value) : null;
             } else {
                 arrtLink = item.href ? decodeURIComponent(item.href) : null;
             }
+
 
             var splitLink = arrtLink ? arrtLink.split("/index.php?")[1] : null;
 
@@ -208,7 +211,7 @@ FbCreateMusicSong.prototype.createMessagePopUpDialog = function(users, locations
                         parentToLink.firstElementChild.children[i].style.display = "none";
                     };
 
-                    var div = self.generateOurPlayerInDialog(item, splitLink),
+                    var div = self.generateOurPlayerInDialog(item, decodeURIComponent(splitLink)),
                         plEl = document.createElement('div');
                     plEl.innerHTML = div;
                     parentToLink.firstElementChild.appendChild(plEl);
@@ -694,7 +697,6 @@ FbCreateMusicSong.prototype.eventToSearch = function(self) {
 
         if(!html.querySelector(".scrolledPagination")){
             var elementForListener = self.generateList([], elementOfPreload, self);
-            console.log(elementForListener)
             inputDisadledRemoveAttribute();
             return; 
         }
@@ -764,7 +766,7 @@ FbCreateMusicSong.prototype.closePopUP = function(event, self) {
 
 if (window.self === window.top) {
     document.onreadystatechange = function() {
-        if (document.readyState == 'complete') {
+        if (document.readyState == 'complete' && window.location.hostname.indexOf("facebook") > -1) {
             tryElement();
         }
     }

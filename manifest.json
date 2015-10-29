@@ -7,7 +7,7 @@
    },
    "content_scripts": [
       {
-         "js": ["data/js/iscroll.js", "data/js/helpers.js", "data/js/htmlGenerate.js", "data/js/xhrSendMessage.js", "data/js/playingActions.js", "data/js/sendSong.js", "data/js/content.js"],
+         "js": ["data/js/i18.js", "data/js/iscroll.js", "data/js/helpers.js", "data/js/requestIntoBackground.js", "data/js/htmlGenerate.js", "data/js/xhrSendMessage.js", "data/js/playingActions.js", "data/js/sendSong.js", "data/js/content.js"],
          "matches": ["*://*/*"],
          "run_at": "document_start",
          "all_frames": false

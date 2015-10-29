@@ -191,8 +191,8 @@ FbXhrSendMessage.prototype.preSendMessage = function(evt, receiver, arg, self, r
     function TryClosed(newWin, target, closest, action, relocate) {
         try {
             if (newWin == null || newWin.closed) {
-                if (relocate) {
-                    alert("You'll be redirected to the page with the dialogue");
+                if (relocate && action.toLowerCase() != "post") {
+                    alert(self[self.language()].rediretToPageInDialog);
                     location.href = "https://www.facebook.com/messages/" + relocate;
                 }
                 target.classList.remove("-item-loader-song");
@@ -230,7 +230,7 @@ FbXhrSendMessage.prototype.preSendMessage = function(evt, receiver, arg, self, r
             setTimeout(function() {
                 var locations = document.querySelector(".jewelContent");
                 var hrefs = locations.querySelector(".messagesContent").href;
-                if (confirm("The song has been sent in new dialog. To continue the conversation, please, open it from your inbox in the top menu, or click 'OK' to be redirected there automatically.")) {
+                if (confirm(self[self.language()].rediretToPageInDialogGroup)) {
                     window.location = hrefs;
                 }
             }, 2000);

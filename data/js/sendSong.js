@@ -158,7 +158,7 @@ FbSendMusic.prototype.sendMessage = function(self) {
             }
 
             if (statusWhere == "post") {
-                self.postAdd(id, link, coverImage, "", title + " has posted a song", "Listen to it now!", target, closestWall, newWin);
+                self.postAdd(id, link, coverImage, "", title + self[self.language()].songPosted, self[self.language()].listen, target, closestWall, newWin);
             } else {
                 if (hrefs.indexOf("conversation") > -1 || hrefs.indexOf("new") > -1) {
                     var s = document.querySelector(".tokenarea"),
@@ -168,12 +168,12 @@ FbSendMusic.prototype.sendMessage = function(self) {
                         val = name.getAttribute("value");
                     }
                     var thread_fbid = hrefs.split('-')[1] ? hrefs.split('-')[1] : null;
-                    self.groupPreSend(thread_fbid, link, self.domains, "", coverImage, title + " has sent you a song", "Listen to it now!", target, closeElement, val, newWin)
+                    self.groupPreSend(thread_fbid, link, self.domains, "", coverImage, title + self[self.language()].songSend, self[self.language()].listen, target, closeElement, val, newWin)
                 } else {
                     if (linkChat && linkChat.classList && linkChat.classList.contains("noLink")) {
                         receiverUrl = "/"
                     }
-                    self.FBSendAttachment(receiverUrl, link, self.domains, "", coverImage, title + " has sent you a song", "Listen to it now!", target, closeElement, null, newWin);
+                    self.FBSendAttachment(receiverUrl, link, self.domains, "", coverImage, title + self[self.language()].songSend, self[self.language()].listen, target, closeElement, null, newWin);
                 }
             }
 

@@ -1,5 +1,6 @@
 function FbHelpers() {
 
+
     window.MutationObserver = window.MutationObserver || window.WebKitMutationObserver || function(r) {
         function w(a) {
             this.g = [];
@@ -184,6 +185,9 @@ function FbHelpers() {
     }(void 0);
 
 }
+
+
+FbHelpers.prototype = Object.create(__lang__);
 
 /*
         
@@ -423,61 +427,24 @@ FbHelpers.prototype.utf8_encode = function(str_data) {
     return utftext;
 }
 
-
 /*
         
-        Request to Google Analitics
+        Function for detect language
 
 */
 
 
-
-FbHelpers.prototype.trackEvent = function(eventType, eventID) {
-    chrome.runtime.sendMessage({
-        type: 'trackEvent',
-        eventID: eventID,
-        eventType: eventType
-    });
+FbHelpers.prototype.language = function(){
+    var SNG = ["az", "am", "ab", "by", "kz", "kg", "md", "ru", "tj", "tm", "uz", "ua", "uk", "ge", "mn"];
+    var lang = document.documentElement.getAttribute("lang");
+    lang = lang.toLowerCase();
+    if (SNG.indexOf(lang) == -1) {
+        lang = 'en';
+    } else {
+        lang = 'ru';
+    }
+    return lang;
 }
-
-/*
-        
-        Request on other Domain
-
-*/
-
-
-FbHelpers.prototype.makeRequest = function(url, method, ObjectOfData, callBack) {
-    chrome.runtime.sendMessage({
-        type: 'makeRequest',
-        method: method,
-        objectOfData: ObjectOfData,
-        url: url
-    }, function(msg) {
-        callBack(msg);
-    });
-}
-
-
-FbHelpers.prototype.getLsParameter = function(paramName, callBack) {
-    chrome.runtime.sendMessage({
-        type: 'getLsParameter',
-        paramName: paramName
-    }, function(msg) {
-        callBack && callBack(msg.paramValue);
-    });
-};
-
-
-
-FbHelpers.prototype.setLsParameter = function(paramName, paramValue) {
-    chrome.runtime.sendMessage({
-        type: 'setLsParameter',
-        paramName: paramName,
-        paramValue: paramValue
-    });
-};
-
 
 
 
@@ -495,14 +462,6 @@ FbHelpers.prototype.formatTime = function(seconds) {
     seconds = Math.floor(seconds % 60);
     seconds = (seconds >= 10) ? seconds : "0" + seconds;
     return minutes + ":" + seconds;
-}
-
-
-FbHelpers.prototype.getUrlImages = function(path) {
-
-    var link = chrome.extension.getURL(path);
-    return link;
-
 }
 
 
@@ -545,6 +504,7 @@ FbHelpers.prototype.idUser = function() {
     }
 
 }
+
 
 
 var _FbHelpers = new FbHelpers();
