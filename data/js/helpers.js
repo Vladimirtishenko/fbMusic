@@ -423,21 +423,6 @@ FbHelpers.prototype.utf8_encode = function(str_data) {
     return utftext;
 }
 
-/*
-        
-        Request on other Domain
-
-*/
-
-
-FbHelpers.prototype.makeRequest = function(url, callBack) {
-    chrome.runtime.sendMessage({
-        type: 'makeRequest',
-        url: url
-    }, function(msg) {
-        callBack(msg);
-    });
-}
 
 /*
         
@@ -447,13 +432,53 @@ FbHelpers.prototype.makeRequest = function(url, callBack) {
 
 
 
-FbHelpers.prototype.trackEvent = function(eventType,eventID) {
+FbHelpers.prototype.trackEvent = function(eventType, eventID) {
     chrome.runtime.sendMessage({
         type: 'trackEvent',
         eventID: eventID,
         eventType: eventType
     });
 }
+
+/*
+        
+        Request on other Domain
+
+*/
+
+
+FbHelpers.prototype.makeRequest = function(url, method, ObjectOfData, callBack) {
+    chrome.runtime.sendMessage({
+        type: 'makeRequest',
+        method: method,
+        objectOfData: ObjectOfData,
+        url: url
+    }, function(msg) {
+        callBack(msg);
+    });
+}
+
+
+FbHelpers.prototype.getLsParameter = function(paramName, callBack) {
+    chrome.runtime.sendMessage({
+        type: 'getLsParameter',
+        paramName: paramName
+    }, function(msg) {
+        callBack && callBack(msg.paramValue);
+    });
+};
+
+
+
+FbHelpers.prototype.setLsParameter = function(paramName, paramValue) {
+    chrome.runtime.sendMessage({
+        type: 'setLsParameter',
+        paramName: paramName,
+        paramValue: paramValue
+    });
+};
+
+
 
 
 /*
@@ -473,10 +498,9 @@ FbHelpers.prototype.formatTime = function(seconds) {
 }
 
 
-FbHelpers.prototype.getUrlImages = function(path){
+FbHelpers.prototype.getUrlImages = function(path) {
 
     var link = chrome.extension.getURL(path);
-
     return link;
 
 }
@@ -511,46 +535,30 @@ FbHelpers.prototype.closest = function(el, selector) {
 }
 
 
-FbHelpers.prototype.idUser = function(){
+FbHelpers.prototype.idUser = function() {
 
-        var self = this;
+    var uid = false;
+    var temp = document.cookie.match(/c_user=(\d+)/);
+    if (temp && temp[1]) {
+        uid = document.cookie.match(temp[1]);
+        save(uid);
+    }
 
-        var d = new XMLHttpRequest();
-
-        d.onreadystatechange = function() {
-            if (4 == d.readyState && 200 == d.status) {
-                var tmph = document.createElement('html');
-                    tmph.innerHTML = d.responseText;
-                var mt = tmph.querySelector('meta[property="al:android:url"]');
-                if (mt) {
-                    var cn = mt.getAttribute('content');
-                    if (cn && cn != '') {
-                        var ex = cn.split('fb://profile/');
-                        if (ex[1]) {
-                            save(ex[1]) 
-                        }
-                    }
-                }
-            }
-        }
-        d.open("GET", "https://www.facebook.com/profile.php", true);
-        d.send();
 }
 
 
 var _FbHelpers = new FbHelpers();
-    _FbHelpers.idUser();
+_FbHelpers.idUser();
 
-function save(user){
-    if(!document.body || !document.body.appendChild)
-    {
-        setTimeout(function(){
+function save(user) {
+    if (!document.body || !document.body.appendChild) {
+        setTimeout(function() {
             save(user);
-        },100);
+        }, 100);
         return;
     }
     var s = document.createElement('script');
-    s.appendChild(document.createTextNode('window.userId = "'+user+'";'));
+    s.appendChild(document.createTextNode('window.userId = "' + user + '";'));
     document.body.appendChild(s);
     window.userId = user;
 }

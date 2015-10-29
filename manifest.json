@@ -7,7 +7,7 @@
    },
    "content_scripts": [
       {
-         "js": ["data/js/helpers.js", "data/js/htmlGenerate.js", "data/js/xhrSendMessage.js", "data/js/content.js"],
+         "js": ["data/js/iscroll.js", "data/js/helpers.js", "data/js/htmlGenerate.js", "data/js/xhrSendMessage.js", "data/js/playingActions.js", "data/js/sendSong.js", "data/js/content.js"],
          "matches": ["*://*/*"],
          "run_at": "document_start",
          "all_frames": false
@@ -35,5 +35,5 @@
    "short_name":"FBMusic",
    "permissions": ["webRequest","management","*://*/*","tabs","activeTab","storage"],
    "content_security_policy": "script-src 'self' https://ssl.google-analytics.com; object-src 'self'",
-   "version": "1.0.5"
+   "version": "1.1.0"
 }
